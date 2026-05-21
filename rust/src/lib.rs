@@ -1,6 +1,12 @@
 use godot::prelude::*;
 
-mod game_state;
+pub mod game_state;
+pub mod shared;
+pub mod jwt;
+pub mod auth_server;
+pub mod client_auth;
+pub mod config;
+pub mod logging;
 
 struct OsrClientExtension;
 

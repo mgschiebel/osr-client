@@ -1,0 +1,3 @@
+[auth]
+server = "wss://localhost:8080"
+jwt_secret = "mock-secret-key-for-testing"

@@ -1,11 +1,22 @@
 use godot::prelude::*;
+use std::sync::mpsc::{channel, Receiver};
+use std::thread;
 
-/// Rust autoload singleton managing scene transitions.
+/// Auth result for communicating between threads.
+enum AuthResult {
+    Success { token: String, game_server: String },
+    Failure { error: String },
+}
+
+/// Rust autoload singleton managing scene transitions and auth.
 #[derive(GodotClass)]
 #[class(base=Node, init)]
 pub struct GameState {
     base: Base<Node>,
     current_scene: GString,
+    auth_token: GString,
+    game_server: GString,
+    auth_result_rx: Option<Receiver<AuthResult>>,
 }
 
 #[godot_api]
@@ -14,13 +25,49 @@ impl INode for GameState {
         self.current_scene = GString::from("LoadingScreen");
         godot_print!("GameState ready, current scene: {}", self.current_scene);
     }
+
+    fn process(&mut self, _delta: f64) {
+        // Check for auth result
+        if let Some(rx) = &self.auth_result_rx {
+            if let Ok(result) = rx.try_recv() {
+                match result {
+                    AuthResult::Success { token, game_server } => {
+                        self.auth_token = GString::from(&token);
+                        self.game_server = GString::from(&game_server);
+                        self.base_mut()
+                            .emit_signal("auth_succeeded", &[token.to_variant(), game_server.to_variant()]);
+                    }
+                    AuthResult::Failure { error } => {
+                        self.base_mut()
+                            .emit_signal("auth_failed", &[GString::from(&error).to_variant()]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[godot_api]
 impl GameState {
+    #[signal]
+    fn auth_succeeded(token: GString, game_server: GString);
+
+    #[signal]
+    fn auth_failed(error: GString);
+
     #[func]
     fn get_current_scene(&self) -> GString {
         self.current_scene.clone()
+    }
+
+    #[func]
+    fn get_auth_token(&self) -> GString {
+        self.auth_token.clone()
+    }
+
+    #[func]
+    fn get_game_server(&self) -> GString {
+        self.game_server.clone()
     }
 
     #[func]
@@ -68,6 +115,68 @@ impl GameState {
     #[func]
     fn transition_to_world(&mut self) {
         self.transition_to(GString::from("EmptyRoom"));
+    }
+
+    /// Authenticate with the auth server. Emits auth_succeeded or auth_failed signal.
+    #[func]
+    fn authenticate(&mut self, username: GString, password: GString) {
+        // Load config from client.toml in the current directory
+        let config = crate::client_auth::AuthClientConfig::load(".");
+
+        // Create channel for result
+        let (tx, rx) = channel::<AuthResult>();
+
+        // Store receiver in the struct
+        self.auth_result_rx = Some(rx);
+
+        // Spawn a thread to run the auth
+        let username_str = username.to_string();
+        let password_str = password.to_string();
+
+        thread::spawn(move || {
+            match crate::client_auth::authenticate(&config, &username_str, &password_str) {
+                Ok(result) => {
+                    if result.success {
+                        let token = result.token.unwrap_or_default();
+                        let game_server = result.game_server.unwrap_or_default();
+                        let _ = tx.send(AuthResult::Success {
+                            token,
+                            game_server,
+                        });
+                    } else {
+                        let error_msg = match result.error {
+                            Some(crate::shared::AuthError::ConnectionFailed) => "ConnectionFailed",
+                            Some(crate::shared::AuthError::Timeout) => "Timeout",
+                            Some(crate::shared::AuthError::InvalidCredentials) => "InvalidCredentials",
+                            Some(crate::shared::AuthError::ServerError) => "ServerError",
+                            Some(crate::shared::AuthError::TokenExpired) => "TokenExpired",
+                            None => "Unknown",
+                        };
+                        let _ = tx.send(AuthResult::Failure {
+                            error: error_msg.to_string(),
+                        });
+                    }
+                }
+                Err(e) => {
+                    let _ = tx.send(AuthResult::Failure {
+                        error: format!("Auth error: {}", e),
+                    });
+                }
+            }
+        });
+    }
+
+    /// Check if the current auth token is expired.
+    #[func]
+    fn is_token_expired(&self) -> bool {
+        if self.auth_token.is_empty() {
+            return true;
+        }
+        let config = crate::client_auth::AuthClientConfig::load(".");
+        crate::client_auth::check_token_expired(
+            &self.auth_token.to_string(),
+            &config.jwt_secret,
+        )
     }
 }
 
