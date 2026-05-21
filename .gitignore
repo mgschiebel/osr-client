@@ -1,7 +1,28 @@
-.agents/
-.claude/
-CLAUDE.md
-CONTEXT.md
-docs/agents
-docs/automation.md
-skills-lock.json
+# Godot 4+ specific ignores
+*.import
+*.md5
+*.translation
+
+# Godot-specific ignores
+*.godot/
+
+# Rust ignores
+/target/
+**/target/
+Cargo.lock
+
+# Binaries
+bin/
+*.so
+*.dll
+*.dylib
+
+# IDE ignores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.log
+*.tmp

@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(20, 1, 20)
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_empty"]
+cell_size = 0.5
+agent_radius = 0.5
+agent_height = 2.0
+
+[sub_resource type="GDScript" id="GDScript_empty"]
+script/source = "extends Node3D\n\nfunc _ready():\n\t$NavigationRegion3D.bake_navigation_mesh(true)\n"
+
+[node name="EmptyRoom" type="Node3D"]
+script = SubResource("GDScript_empty")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+position = Vector3(0, 10, 0)
+rotation_degrees = Vector3(-45, 0, 0)
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.5, 0)
+mesh = SubResource("BoxMesh_floor")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_empty")
+
+[node name="Player" parent="." instance=ExtResource("res://scenes/shared/Player.tscn")]
