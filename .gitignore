@@ -1,0 +1,7 @@
+.agents/
+.claude/
+CLAUDE.md
+CONTEXT.md
+docs/agents
+docs/automation.md
+skills-lock.json
