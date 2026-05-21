@@ -1,3 +1,6 @@
+# Claude files
+.claude/settings.local.json
+
 # Godot 4+ specific ignores
 *.import
 *.md5

@@ -1,0 +1,26 @@
+rules:
+  - id: unwrap-used
+    severity: WARNING
+    languages: [rust]
+    message: "unwrap() called - consider using expect() or proper error handling"
+    pattern: $X.unwrap(...)
+    fix: $X.expect("...")
+
+  - id: sync-over-async
+    severity: ERROR
+    languages: [rust]
+    message: "Potential blocking call in async context"
+    patterns:
+      - pattern-inside: |
+          async fn $FN(...) { ... }
+      - pattern: std::thread::sleep(...)
+
+  - id: hardcoded-credential
+    severity: ERROR
+    languages: [rust]
+    message: "Hardcoded credential or secret detected"
+    patterns:
+      - pattern-either:
+          - pattern-regex: '"sk-[a-zA-Z0-9]{10,}'
+          - pattern-regex: '"ghp_[a-zA-Z0-9]{10,}'
+          - pattern-regex: '"[a-zA-Z0-9_]+"(?:\s*:\s*)?"(?:secret|password|api_key|token)[^"]{0,20}"'

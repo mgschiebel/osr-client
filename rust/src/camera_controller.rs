@@ -17,6 +17,11 @@ pub struct CameraController {
 #[godot_api]
 impl INode3D for CameraController {
     fn ready(&mut self) {
+        self.third_person_distance = 5.0;
+        self.max_distance = 10.0;
+        self.min_distance = 1.0;
+        self.near_clip_threshold = 0.5;
+
         let children = self.base.get_children();
         for i in 0..children.len() {
             let child = children.get(i).expect("Child exists");
@@ -29,23 +34,33 @@ impl INode3D for CameraController {
 
     fn process(&mut self, _delta: f64) {
         let input = Input::singleton();
-        if input.is_action_just_pressed("camera_zoom") {
-            self.handle_zoom();
+        if input.is_action_just_pressed("camera_zoom_out") {
+            self.zoom_out();
+        }
+        if input.is_action_just_pressed("camera_zoom_in") {
+            self.zoom_in();
         }
         self.update_camera_position();
     }
 }
 
 impl CameraController {
-    fn handle_zoom(&mut self) {
+    fn zoom_out(&mut self) {
         if self.is_first_person {
             self.is_first_person = false;
             self.third_person_distance = self.min_distance + 1.0;
         } else {
-            self.third_person_distance -= 1.0;
-            if self.third_person_distance < self.near_clip_threshold {
-                self.is_first_person = true;
-            }
+            self.third_person_distance = (self.third_person_distance + 1.0).min(self.max_distance);
+        }
+    }
+
+    fn zoom_in(&mut self) {
+        if self.is_first_person {
+            return;
+        }
+        self.third_person_distance -= 1.0;
+        if self.third_person_distance <= self.near_clip_threshold {
+            self.is_first_person = true;
         }
     }
 

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mock-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    cap_add:
+      - NET_ADMIN  # For tc netem latency simulation
+    environment:
+      - RUST_LOG=info
+
+  # Test container for running containerized tests
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    cap_add:
+      - NET_ADMIN  # For tc netem
+    volumes:
+      - ./:/app
+    depends_on:
+      - mock-auth
+    environment:
+      - OSR_TEST_USER=testuser
+      - OSR_TEST_PASS=testpass
+      - AUTH_SERVER_URL=ws://mock-auth:8080
+    command: ["/bin/bash", "-c", "sleep infinity"]
