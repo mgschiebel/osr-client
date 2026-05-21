@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
 [sub_resource type="BoxMesh" id="BoxMesh_floor"]
 size = Vector3(20, 1, 20)
@@ -11,8 +11,20 @@ agent_height = 2.0
 [sub_resource type="GDScript" id="GDScript_empty"]
 script/source = "extends Node3D\n\nfunc _ready():\n\t$NavigationRegion3D.bake_navigation_mesh(true)\n"
 
+[sub_resource type="Environment" id="Environment_empty"]
+background_mode = 1
+sky = SubResource("Sky_empty")
+
+[sub_resource type="Sky" id="Sky_empty"]
+sky_data = SubResource("ProceduralSky_sky")
+
+[sub_resource type="ProceduralSky" id="ProceduralSky_sky"]
+
 [node name="EmptyRoom" type="Node3D"]
 script = SubResource("GDScript_empty")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_empty")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 position = Vector3(0, 10, 0)

@@ -11,7 +11,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-GameState="*res://scripts/autoloads/GameState.gd"
+GameState="*GameState"
 
 [input]
 
