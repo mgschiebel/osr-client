@@ -35,12 +35,16 @@ func _setup_input_map():
 		ev.keycode = KEY_D
 		InputMap.action_add_event("move_right", ev)
 
-	# camera_zoom
-	if not InputMap.has_action("camera_zoom"):
-		InputMap.add_action("camera_zoom")
+	# camera_zoom_out (wheel up = zoom out, increase distance)
+	if not InputMap.has_action("camera_zoom_out"):
+		InputMap.add_action("camera_zoom_out")
 		var ev_up = InputEventMouseButton.new()
 		ev_up.button_index = MOUSE_BUTTON_WHEEL_UP
-		InputMap.action_add_event("camera_zoom", ev_up)
+		InputMap.action_add_event("camera_zoom_out", ev_up)
+
+	# camera_zoom_in (wheel down = zoom in, decrease distance)
+	if not InputMap.has_action("camera_zoom_in"):
+		InputMap.add_action("camera_zoom_in")
 		var ev_down = InputEventMouseButton.new()
 		ev_down.button_index = MOUSE_BUTTON_WHEEL_DOWN
-		InputMap.action_add_event("camera_zoom", ev_down)
+		InputMap.action_add_event("camera_zoom_in", ev_down)
