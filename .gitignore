@@ -1,3 +1,13 @@
+# Claude files
+.agents/
+.claude/
+docs/adr
+docs/agents
+docs/automation.md
+CLAUDE.md
+CONTEXT.md
+skills-lock.json
+
 # Godot 4+ specific ignores
 *.import
 *.md5
